@@ -1,7 +1,13 @@
 import telebot
+import os
 from datetime import datetime
 
-TOKEN = "8672359485:AAEEXSziCjrz9oEEBQiGPLHeZbtXaLhihZo"   # ← Replace this with your real BotFather token
+# Get token securely from Railway environment variable
+TOKEN = os.getenv("TOKEN")
+
+if not TOKEN:
+    print("❌ Error: TOKEN environment variable is not set!")
+    exit(1)
 
 bot = telebot.TeleBot(TOKEN)
 
@@ -18,13 +24,14 @@ def get_liq_message():
     msg += "8. **KAT**\n   SL: 5-8% tight | TP: 15-30%\n\n"
     msg += "9. **BTC** (~$77,650)\n   SL: $76,800 | TP1: $79,500 | TP2: $81,300\n\n"
     msg += "10. **ETH** (~$2,317)\n   SL: $2,250 | TP1: $2,400 | TP2: $2,550\n\n"
-    msg += "⚠️ Always check live heatmap on Coinglass!\n"
-    msg += "https://www.coinglass.com/pro/futures/LiquidationHeatMap"
+    msg += "⚠️ Heatmap changes fast. Always check live:\n"
+    msg += "https://www.coinglass.com/pro/futures/LiquidationHeatMap\n"
+    msg += "Risk only 1% per trade!"
     return msg
 
 @bot.message_handler(commands=['start', 'help'])
 def welcome(message):
-    bot.reply_to(message, "👋 Send /liq to see Top 10 liquidation heatmap coins with SL & TP.")
+    bot.reply_to(message, "👋 Send /liq or /heatmap to see Top 10 liquidation heatmap coins with SL & TP.")
 
 @bot.message_handler(commands=['liq', 'heatmap'])
 def send_liq(message):
