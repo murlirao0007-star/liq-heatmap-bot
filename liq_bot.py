@@ -1,10 +1,7 @@
 import telebot
 import os
-import time
-import threading
-from datetime import datetime
-import schedule
 import requests
+from datetime import datetime
 
 TOKEN = os.getenv("TOKEN")
 
@@ -16,12 +13,10 @@ bot = telebot.TeleBot(TOKEN)
 
 def get_heatmap_coins():
     try:
-        # Coinglass
         url = "https://open-api-v4.coinglass.com/api/futures/liquidation/coin-list"
         response = requests.get(url, timeout=15)
         data = response.json().get('data', [])[:10]
 
-        # Prices
         price_url = "https://api.coingecko.com/api/v3/coins/markets"
         price_params = {"vs_currency": "usd", "order": "volume_desc", "per_page": 50, "page": 1}
         price_data = requests.get(price_url, params=price_params, timeout=12).json()
