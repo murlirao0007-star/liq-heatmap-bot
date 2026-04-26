@@ -7,7 +7,6 @@ import schedule
 import requests
 
 TOKEN = os.getenv("TOKEN")
-COINGLASS_KEY = os.getenv("COINGLASS_API_KEY")
 
 if not TOKEN:
     print("❌ TOKEN not set!")
@@ -15,17 +14,12 @@ if not TOKEN:
 
 bot = telebot.TeleBot(TOKEN)
 
-YOUR_CHAT_ID = 7219470795   # ← CHANGE THIS TO YOUR REAL CHAT ID
-
 def get_heatmap_coins():
     try:
-        # Coinglass
         url = "https://open-api-v4.coinglass.com/api/futures/liquidation/coin-list"
-        headers = {"cg-api-key": COINGLASS_KEY} if COINGLASS_KEY else {}
-        response = requests.get(url, headers=headers, timeout=15)
-        data = response.json().get('data', [])[:12]
+        response = requests.get(url, timeout=15)
+        data = response.json().get('data', [])[:10]
 
-        # Prices
         price_url = "https://api.coingecko.com/api/v3/coins/markets"
         price_params = {"vs_currency": "usd", "order": "volume_desc", "per_page": 50, "page": 1}
         price_data = requests.get(price_url, params=price_params, timeout=12).json()
@@ -34,7 +28,7 @@ def get_heatmap_coins():
         now = datetime.now().strftime("%d %B %Y, %H:%M IST")
         msg = f"🔥 **15-Min Coinglass Heatmap Alert** - {now}\n\n"
 
-        for i, coin in enumerate(data[:10], 1):
+        for i, coin in enumerate(data, 1):
             symbol = coin.get('symbol', 'N/A')
             price = price_map.get(symbol, 0)
             long_liq = coin.get('long_liquidation_usd_24h', 0)
@@ -46,7 +40,7 @@ def get_heatmap_coins():
             tp = round(price * 1.18, 4) if price else 0
 
             msg += f"{i}. **{symbol}** (~${price:,.4f})\n"
-            msg += f"   24h Liq: ${total_liq:,.0f} (L:${long_liq:,.0f} | S:${short_liq:,.0f})\n"
+            msg += f"   24h Liq: ${total_liq:,.0f}\n"
             msg += f"   Entry: ~${entry:,.4f} | SL: ~${sl:,.4f} | TP: ~${tp:,.4f}\n\n"
 
         msg += "⚠️ Only Coinglass Heatmap coins\n"
@@ -56,13 +50,9 @@ def get_heatmap_coins():
     except Exception as e:
         return f"❌ Error: {e}"
 
-def send_alert():
-    text = get_heatmap_coins()
-    bot.send_message(YOUR_CHAT_ID, text, parse_mode='Markdown')
-
 @bot.message_handler(commands=['start', 'help'])
 def welcome(message):
-    bot.reply_to(message, "👋 /liq = Coinglass Heatmap Alert\nAlerts every 15 min + 8 PM IST daily.")
+    bot.reply_to(message, "👋 Send /liq for Coinglass Heatmap Alert")
 
 @bot.message_handler(commands=['liq', 'heatmap'])
 def send_liq(message):
@@ -70,15 +60,5 @@ def send_liq(message):
     text = get_heatmap_coins()
     bot.reply_to(message, text, parse_mode='Markdown')
 
-schedule.every(15).minutes.do(send_alert)
-schedule.every().day.at("20:00").do(send_alert)
-
-def run_scheduler():
-    while True:
-        schedule.run_pending()
-        time.sleep(60)
-
-threading.Thread(target=run_scheduler, daemon=True).start()
-
-print("✅ Bot running - Coinglass Heatmap only")
+print("✅ Bot running - replies to everyone")
 bot.infinity_polling()
