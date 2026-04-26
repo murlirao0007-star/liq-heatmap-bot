@@ -1,7 +1,5 @@
-import telebot
 import os
-import requests
-from datetime import datetime
+import telebot
 
 TOKEN = os.getenv("TOKEN")
 
@@ -9,16 +7,13 @@ if not TOKEN:
     print("❌ TOKEN not set!")
     exit(1)
 
+print("✅ TOKEN is set! Starting bot...")
+
 bot = telebot.TeleBot(TOKEN)
 
-@bot.message_handler(commands=['start', 'help'])
-def welcome(message):
-    bot.reply_to(message, "👋 Send /liq for Coinglass Heatmap Alert")
+@bot.message_handler(commands=['start', 'test'])
+def start(message):
+    bot.reply_to(message, "✅ Bot is working! TOKEN is correct.")
 
-@bot.message_handler(commands=['liq', 'heatmap'])
-def send_liq(message):
-    bot.send_chat_action(message.chat.id, 'typing')
-    bot.reply_to(message, "✅ Bot is working! This is a test message.")
-
-print("✅ Bot running")
+print("✅ Bot running successfully")
 bot.infinity_polling()
